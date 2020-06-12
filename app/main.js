@@ -1,26 +1,33 @@
 const { app, BrowserWindow, dialog } = require("electron");
 const fs = require("fs");
+const { create } = require("domain");
 
 let mainWindow = null;
 
-app.on("ready", () => {
-  mainWindow = new BrowserWindow({
+const windows = new Set();
+const createWindow = (exports.createWindow = () => {
+  let newWindow = new BrowserWindow({
     show: false,
     webPreferences: {
       nodeIntegration: true,
     },
   });
-  mainWindow.loadFile(__dirname + "/index.html");
-  mainWindow.once("ready-to-show", () => {
-    mainWindow.show();
-    // getFileFromUser();
+  newWindow.loadFile(__dirname + "/index.html");
+  newWindow.once("ready-to-show", () => {
+    newWindow.show();
   });
-  mainWindow.on("closed", () => {
-    mainWindow = null;
+  newWindow.on("closed", () => {
+    windows.delete(newWindow);
+    newWindow = null;
   });
+  windows.add(newWindow);
+  return newWindow;
 });
-const getFileFromUser = (exports.getFileFromUser = () => {
-  const files = dialog.showOpenDialogSync(mainWindow, {
+app.on("ready", () => {
+  createWindow();
+});
+const getFileFromUser = (exports.getFileFromUser = (targetWindow) => {
+  const files = dialog.showOpenDialogSync(targetWindow, {
     properties: ["openFile"],
     filters: [
       { name: "Markdown Files", extensions: ["md", "markdown"] },
@@ -28,10 +35,19 @@ const getFileFromUser = (exports.getFileFromUser = () => {
     ],
   });
   if (files) {
-    openFile(files[0]);
+    openFile(targetWindow, files[0]);
   }
 });
-const openFile = (file) => {
+const openFile = (targetWindow, file) => {
   const content = fs.readFileSync(file).toString();
-  mainWindow.webContents.send("file-opened", file, content);
+  targetWindow.webContents.send("file-opened", file, content);
 };
+
+app.on("window-all-closed", () => {
+  if (process.platform === "darwin") return false;
+  app.quit();
+});
+
+app.on("activate", (event, hasVisibleWindow) => {
+  if (!hasVisibleWindow) createWindow();
+});
