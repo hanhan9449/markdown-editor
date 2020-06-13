@@ -63,3 +63,36 @@ app.on("will-finish-launching", () => {
     });
   });
 });
+
+const saveHtml = (exports.saveHtml = (targetWindow, content) => {
+  const file = dialog.showSaveDialogSync(targetWindow, {
+    title: "Save HTML",
+    defaultPath: app.getPath("documents"),
+    filters: [
+      {
+        name: "HTML Files",
+        extensions: ["html", "htm"],
+      },
+    ],
+  });
+  if (!file) return;
+  fs.writeFileSync(file, content);
+});
+
+const saveMarkdown = (exports.saveMarkdown = (targetWindow, file, content) => {
+  if (!file) {
+    file = dialog.showSaveDialogSync(targetWindow, {
+      title: "Save Markdown",
+      defaultPath: app.getPath("documents"),
+      filters: [
+        {
+          name: "Markdwon Files",
+          extensions: ["md", "markdown"],
+        },
+      ],
+    });
+  }
+  if (!file) return;
+  fs.writeFileSync(file, content);
+  openFile(targetWindow, file);
+});

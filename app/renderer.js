@@ -56,3 +56,18 @@ const updateUserInterface = (isEdited) => {
   saveMarkdownButton.disabled = !isEdited;
   revertButton.disabled = !isEdited;
 };
+
+saveHtmlButton.addEventListener("click", () => {
+  mainProcess.saveHtml(currentWindow, htmlView.innerHTML);
+  console.log(htmlView.innerHTML);
+});
+
+saveMarkdownButton.addEventListener("click", () => {
+  mainProcess.saveMarkdown(currentWindow, filePath, markdownView.value);
+});
+
+revertButton.addEventListener("click", () => {
+  markdownView.value = originalContent;
+  renderMarkdownToHtml(originalContent);
+  updateUserInterface();
+});
