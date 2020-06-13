@@ -55,3 +55,11 @@ app.on("window-all-closed", () => {
 app.on("activate", (event, hasVisibleWindow) => {
   if (!hasVisibleWindow) createWindow();
 });
+app.on("will-finish-launching", () => {
+  app.on("open-file", (event, file) => {
+    const win = createWindow();
+    win.once("ready-to-show", () => {
+      openFile(win, file);
+    });
+  });
+});
