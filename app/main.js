@@ -38,10 +38,14 @@ const getFileFromUser = (exports.getFileFromUser = (targetWindow) => {
     openFile(targetWindow, files[0]);
   }
 });
-const openFile = (targetWindow, file) => {
+const openFile = (exports.openFile = (targetWindow, file) => {
   const content = fs.readFileSync(file).toString();
+  // 将编辑过的文件添加到系统的最近打开
+  app.addRecentDocument(file);
+  // macos
+  targetWindow.setRepresentedFilename(file);
   targetWindow.webContents.send("file-opened", file, content);
-};
+});
 
 app.on("window-all-closed", () => {
   if (process.platform === "darwin") return false;
